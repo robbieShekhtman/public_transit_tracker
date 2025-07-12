@@ -16,6 +16,7 @@ func SetupRouter(db *sql.DB) *gin.Engine {
 	api.GET("/routes/:route_id/trips", GetTripsByRouteID(db))
 	api.GET("/stops", GetStops(db))
 	api.GET("/stops/:stop_id", GetStopByID(db))
+	api.GET("/live/:route_id", GetLiveVehicles())
 
 	return r
 }
