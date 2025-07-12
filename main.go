@@ -2,8 +2,10 @@ package main
 
 import (
 	"log"
+	"public_transport_tracker/handlers"
 	"public_transport_tracker/parser"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
@@ -18,8 +20,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	parser.LoadStops(db, "data/gtfs_static/stops.txt")
-	parser.LoadRoutes(db, "data/gtfs_static/routes.txt")
-	parser.LoadTrips(db, "data/gtfs_static/trips.txt")
-	parser.LoadStopTimes(db, "data/gtfs_static/stop_times.txt")
+	r := gin.Default()
+	r.SetTrustedProxies([]string{"127.0.0.1"})
+	r.GET("/routes", handlers.GetRoutes(db))
+	r.GET("/stops", handlers.GetStops(db))
+	r.GET("/stops/:stop_id", handlers.GetStopByID(db))
+	r.GET("/routes/:route_id/trips", handlers.GetTripsByRouteID(db))
+
+	port := ":8080"
+
+	log.Println("Starting server on http://localhost" + port)
+	r.Run(port)
 }
