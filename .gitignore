@@ -1,2 +1,3 @@
 data/gtfs_static/
 .vscode
+.env
