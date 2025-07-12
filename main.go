@@ -5,7 +5,6 @@ import (
 	"public_transport_tracker/handlers"
 	"public_transport_tracker/parser"
 
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
@@ -20,12 +19,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	r := gin.Default()
-	r.SetTrustedProxies([]string{"127.0.0.1"})
-	r.GET("/routes", handlers.GetRoutes(db))
-	r.GET("/stops", handlers.GetStops(db))
-	r.GET("/stops/:stop_id", handlers.GetStopByID(db))
-	r.GET("/routes/:route_id/trips", handlers.GetTripsByRouteID(db))
+	r := handlers.SetupRouter(db)
 
 	port := ":8080"
 
