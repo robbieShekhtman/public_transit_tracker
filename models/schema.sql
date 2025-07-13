@@ -28,3 +28,19 @@ CREATE TABLE IF NOT EXISTS stop_times (
     stop_sequence INT,
     PRIMARY KEY (trip_id, stop_sequence)
 );
+
+
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+
+CREATE TABLE IF NOT EXISTS favorites (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    type TEXT CHECK (type IN ('route', 'stop')),
+    item_id TEXT NOT NULL,
+    UNIQUE(user_id, type, item_id)
+);
