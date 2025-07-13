@@ -36,11 +36,10 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
-
 CREATE TABLE IF NOT EXISTS favorites (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    type TEXT CHECK (type IN ('route', 'stop')),
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     item_id TEXT NOT NULL,
-    UNIQUE(user_id, type, item_id)
+    type TEXT NOT NULL CHECK (type IN ('route', 'stop')),
+    UNIQUE(user_id, item_id, type)
 );
