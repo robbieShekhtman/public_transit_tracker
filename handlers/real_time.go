@@ -102,3 +102,100 @@ func GetLiveVehicles() gin.HandlerFunc {
 		c.JSON(http.StatusOK, result)
 	}
 }
+
+type AlertFeed struct {
+	Entity []struct {
+		ID    string `json:"id"`
+		Alert struct {
+			HeaderText struct {
+				Translation []struct {
+					Text string `json:"text"`
+				} `json:"translation"`
+			} `json:"header_text"`
+			DescriptionText struct {
+				Translation []struct {
+					Text string `json:"text"`
+				} `json:"translation"`
+			} `json:"description_text"`
+			Effect         string `json:"effect"`
+			InformedEntity []struct {
+				RouteID string `json:"route_id"`
+				StopID  string `json:"stop_id"`
+			} `json:"informed_entity"`
+			ActivePeriod []struct {
+				Start int64 `json:"start"`
+				End   int64 `json:"end"`
+			} `json:"active_period"`
+		} `json:"alert"`
+	} `json:"entity"`
+}
+
+func GetAlerts() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		url := "https://cdn.mbta.com/realtime/Alerts_enhanced.json"
+		resp, err := http.Get(url)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		defer resp.Body.Close()
+
+		var feed AlertFeed
+		err = json.NewDecoder(resp.Body).Decode(&feed)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, feed.Entity)
+	}
+}
+
+type TripUpdateFeed struct {
+	Entity []struct {
+		TripUpdate struct {
+			Trip struct {
+				TripID  string `json:"trip_id"`
+				RouteID string `json:"route_id"`
+			} `json:"trip"`
+			StopTimeUpdate []struct {
+				StopID  string `json:"stop_id"`
+				Arrival struct {
+					Time        int64 `json:"time"`
+					Uncertainty int   `json:"uncertainty"`
+				} `json:"arrival"`
+			} `json:"stop_time_update"`
+		} `json:"trip_update"`
+	} `json:"entity"`
+}
+
+func GetTripUpdates() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		routeID := c.Param("route_id")
+		url := "https://cdn.mbta.com/realtime/TripUpdates_enhanced.json"
+
+		resp, err := http.Get(url)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		defer resp.Body.Close()
+
+		var feed TripUpdateFeed
+		err = json.NewDecoder(resp.Body).Decode(&feed)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Filter by route ID
+		var result []interface{}
+		for _, item := range feed.Entity {
+			if item.TripUpdate.Trip.RouteID == routeID {
+				result = append(result, item)
+			}
+		}
+
+		c.JSON(http.StatusOK, result)
+	}
+}
