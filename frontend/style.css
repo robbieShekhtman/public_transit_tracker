@@ -287,6 +287,15 @@ button:active {
   margin-bottom: 0.5rem;
 }
 
+/* Alert-specific styling */
+.alert-item {
+  border-left: 4px solid #f56565;
+}
+
+.alert-item h4 {
+  color: #f56565;
+}
+
 /* Favorites Section */
 #favorites-section {
   background: #2d3748;
