@@ -361,7 +361,6 @@ async function loadRouteStops() {
       <div class="stop-item">
         <h4>${stop.stop_name || 'Unnamed Stop'}</h4>
         <p><strong>ID:</strong> ${stop.stop_id}</p>
-        <p><strong>Code:</strong> ${stop.stop_code || 'N/A'}</p>
         ${stop.lat && stop.lon ? `<p><strong>Location:</strong> ${stop.lat}, ${stop.lon}</p>` : ''}
       </div>
     `;
