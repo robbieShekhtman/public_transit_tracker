@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transit Tracker - Login</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <h1>MBTA Transit Tracker</h1>
+      <p class="login-subtitle">Sign in to access your transit dashboard</p>
+      
+      <form id="login-form" class="login-form">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="Enter your username" required />
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" onclick="createUser()" class="btn-primary">Create Account</button>
+          <button type="button" onclick="loadUser()" class="btn-secondary">Log In</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

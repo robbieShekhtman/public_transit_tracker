@@ -2,9 +2,11 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"public_transport_tracker/handlers"
 	"public_transport_tracker/parser"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
@@ -22,6 +24,17 @@ func main() {
 	r := handlers.SetupRouter(db)
 
 	port := ":8080"
+
+	r.Static("/static", "./frontend")
+	r.LoadHTMLFiles("frontend/index.html", "frontend/dashboard.html")
+
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", nil)
+	})
+
+	r.GET("/dashboard.html", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "dashboard.html", nil)
+	})
 
 	log.Println("Starting server on http://localhost" + port)
 	r.Run(port)

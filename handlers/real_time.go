@@ -188,7 +188,6 @@ func GetTripUpdates() gin.HandlerFunc {
 			return
 		}
 
-		// Filter by route ID
 		var result []interface{}
 		for _, item := range feed.Entity {
 			if item.TripUpdate.Trip.RouteID == routeID {
