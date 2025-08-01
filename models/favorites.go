@@ -3,9 +3,10 @@ package models
 import "database/sql"
 
 type Favorite struct {
-	ID     int    `json:"id"`
-	Type   string `json:"type"`
-	ItemID string `json:"item_id"`
+	ID       int    `json:"id"`
+	Type     string `json:"type"`
+	ItemID   string `json:"item_id"`
+	ItemName string `json:"item_name,omitempty"`
 }
 
 func AddFavorite(db *sql.DB, userID int, itemID, itemType string) (Favorite, error) {
@@ -21,9 +22,12 @@ func AddFavorite(db *sql.DB, userID int, itemID, itemType string) (Favorite, err
 
 func GetFavorites(db *sql.DB, userID int) ([]Favorite, error) {
 	rows, err := db.Query(`
-        SELECT id, item_id, type 
-        FROM favorites 
-        WHERE user_id = $1
+        SELECT f.id, f.item_id, f.type, 
+               COALESCE(r.route_long_name, r.route_short_name) as item_name
+        FROM favorites f
+        LEFT JOIN routes r ON f.item_id = r.route_id AND f.type = 'route'
+        WHERE f.user_id = $1
+        ORDER BY f.id DESC
     `, userID)
 	if err != nil {
 		return nil, err
@@ -33,8 +37,12 @@ func GetFavorites(db *sql.DB, userID int) ([]Favorite, error) {
 	var favorites []Favorite
 	for rows.Next() {
 		var f Favorite
-		if err := rows.Scan(&f.ID, &f.ItemID, &f.Type); err != nil {
+		var itemName sql.NullString
+		if err := rows.Scan(&f.ID, &f.ItemID, &f.Type, &itemName); err != nil {
 			return nil, err
+		}
+		if itemName.Valid {
+			f.ItemName = itemName.String
 		}
 		favorites = append(favorites, f)
 	}
