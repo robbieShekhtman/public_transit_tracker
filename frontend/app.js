@@ -35,7 +35,10 @@ function resetUI() {
   document.getElementById("user-info").innerText = "";
   
   // Clear lists
-  document.getElementById("route-list").innerHTML = "";
+  document.getElementById("subway-routes").innerHTML = "";
+  document.getElementById("light-rail-routes").innerHTML = "";
+  document.getElementById("rail-routes").innerHTML = "";
+  document.getElementById("bus-routes").innerHTML = "";
   document.getElementById("favorites-list").innerHTML = "";
   document.getElementById("route-tab-content").innerHTML = "";
   document.getElementById("selected-route-info").innerHTML = "";
@@ -149,17 +152,48 @@ async function loadRoutes() {
     displayRoutes(allRoutes);
   } catch (error) {
     showMessage('Error loading routes: ' + error.message, 'error');
-    const ul = document.getElementById("route-list");
-    ul.innerHTML = '<li style="grid-column: 1 / -1; text-align: center; color: #f56565;">Failed to load routes</li>';
+    const categories = ['subway-routes', 'light-rail-routes', 'rail-routes', 'bus-routes'];
+    categories.forEach(category => {
+      document.getElementById(category).innerHTML = '<li style="grid-column: 1 / -1; text-align: center; color: #f56565;">Failed to load routes</li>';
+    });
   }
 }
 
 function displayRoutes(routes) {
-  const ul = document.getElementById("route-list");
-  ul.innerHTML = "";
+  // Clear all route lists
+  document.getElementById("subway-routes").innerHTML = "";
+  document.getElementById("light-rail-routes").innerHTML = "";
+  document.getElementById("rail-routes").innerHTML = "";
+  document.getElementById("bus-routes").innerHTML = "";
   
   if (!Array.isArray(routes) || routes.length === 0) {
-    ul.innerHTML = '<li style="grid-column: 1 / -1; text-align: center; color: #666;">No routes available</li>';
+    const categories = ['subway-routes', 'light-rail-routes', 'rail-routes', 'bus-routes'];
+    categories.forEach(category => {
+      document.getElementById(category).innerHTML = '<li style="grid-column: 1 / -1; text-align: center; color: #666;">No routes available</li>';
+    });
+    return;
+  }
+  
+  // Group routes by type
+  const routeGroups = {
+    subway: routes.filter(route => route.route_type === 1),
+    lightRail: routes.filter(route => route.route_type === 0),
+    rail: routes.filter(route => route.route_type === 2),
+    bus: routes.filter(route => route.route_type === 3)
+  };
+  
+  // Display routes in each category
+  displayRouteGroup('subway-routes', routeGroups.subway);
+  displayRouteGroup('light-rail-routes', routeGroups.lightRail);
+  displayRouteGroup('rail-routes', routeGroups.rail);
+  displayRouteGroup('bus-routes', routeGroups.bus);
+}
+
+function displayRouteGroup(containerId, routes) {
+  const container = document.getElementById(containerId);
+  
+  if (!routes || routes.length === 0) {
+    container.innerHTML = '<li style="grid-column: 1 / -1; text-align: center; color: #666;">No routes available</li>';
     return;
   }
   
@@ -169,11 +203,10 @@ function displayRoutes(routes) {
     li.innerHTML = `
       <div>
         <strong>${route.long_name || route.short_name || 'Unnamed Route'}</strong>
-        <br><small>Type: ${getRouteTypeName(route.route_type)}</small>
       </div>
       <button onclick="event.stopPropagation(); addFavorite('${route.route_id}', 'route')">Add to Favorites</button>
     `;
-    ul.appendChild(li);
+    container.appendChild(li);
   });
 }
 
@@ -189,19 +222,31 @@ function getRouteTypeName(type) {
 
 function filterRoutes() {
   const searchTerm = document.getElementById("route-search").value.toLowerCase();
-  const typeFilter = document.getElementById("route-type-filter").value;
+  
+  if (!searchTerm) {
+    displayRoutes(allRoutes);
+    return;
+  }
   
   const filteredRoutes = allRoutes.filter(route => {
-    const matchesSearch = !searchTerm || 
-      (route.long_name && route.long_name.toLowerCase().includes(searchTerm)) ||
-      (route.short_name && route.short_name.toLowerCase().includes(searchTerm));
-    
-    const matchesType = !typeFilter || route.route_type.toString() === typeFilter;
-    
-    return matchesSearch && matchesType;
+    return (route.long_name && route.long_name.toLowerCase().includes(searchTerm)) ||
+           (route.short_name && route.short_name.toLowerCase().includes(searchTerm));
   });
   
   displayRoutes(filteredRoutes);
+}
+
+function toggleCategory(category) {
+  const routeList = document.getElementById(`${category}-routes`);
+  const toggleIcon = routeList.previousElementSibling.querySelector('.toggle-icon');
+  
+  if (routeList.classList.contains('collapsed')) {
+    routeList.classList.remove('collapsed');
+    toggleIcon.textContent = '-';
+  } else {
+    routeList.classList.add('collapsed');
+    toggleIcon.textContent = '+';
+  }
 }
 
 function selectRoute(route) {
