@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -65,12 +67,15 @@ func GetStopsByRoute(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 		query := `
-			SELECT DISTINCT s.stop_id, s.stop_name, s.stop_lat, s.stop_lon
+			SELECT MIN(s.stop_id) as stop_id, s.stop_name, MIN(s.stop_lat) as stop_lat, MIN(s.stop_lon) as stop_lon
 			FROM stops s
-			JOIN stop_times st ON s.stop_id = st.stop_id
-			JOIN trips t ON st.trip_id = t.trip_id
-			JOIN routes r ON t.route_id = r.route_id
-			WHERE r.route_id = $1
+			WHERE s.stop_id IN (
+				SELECT DISTINCT st.stop_id
+				FROM stop_times st
+				JOIN trips t ON st.trip_id = t.trip_id
+				WHERE t.route_id = $1
+			)
+			GROUP BY s.stop_name
 			ORDER BY s.stop_name
 		`
 
@@ -109,6 +114,7 @@ func GetStopsByRoute(db *sql.DB) gin.HandlerFunc {
 			}
 
 			stops = append(stops, s)
+			fmt.Fprintf(os.Stdout, "%s %s\n", s.StopID, s.Name)
 		}
 
 		if len(stops) == 0 {
