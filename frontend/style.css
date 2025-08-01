@@ -1,4 +1,3 @@
-/* Clean, Modern CSS Reset */
 * {
   margin: 0;
   padding: 0;
@@ -19,7 +18,6 @@ body {
   padding: 2rem;
 }
 
-/* Header */
 h1 {
   text-align: center;
   font-size: 2.5rem;
@@ -29,7 +27,6 @@ h1 {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* User Section */
 #user-section {
   background: #2d3748;
   border-radius: 12px;
@@ -96,7 +93,6 @@ button:active {
   border-left: 4px solid #48bb78;
 }
 
-/* Search */
 #search-filters {
   margin-bottom: 8rem !important;
   margin-top: 6rem !important;
@@ -141,7 +137,6 @@ button:active {
   transform: translateY(-1px) !important;
 }
 
-/* Route Categories */
 .route-categories {
   display: grid;
   gap: 1.5rem;
@@ -210,7 +205,6 @@ button:active {
   border-bottom: none;
 }
 
-/* Route Details */
 #route-details-section {
   background: #2d3748;
   border-radius: 12px;
@@ -247,7 +241,6 @@ button:active {
   margin-bottom: 0.25rem;
 }
 
-/* Tab Container */
 .tab-container {
   background: #1a202c;
   border-radius: 8px;
@@ -288,7 +281,6 @@ button:active {
   min-height: 300px;
 }
 
-/* Content Lists */
 .trips-list, .stops-list, .vehicles-list, .alerts-list {
   display: grid;
   gap: 1rem;
@@ -320,7 +312,6 @@ button:active {
   margin-bottom: 0.5rem;
 }
 
-/* Alert-specific styling */
 .alert-item {
   border-left: 4px solid #f56565;
 }
@@ -329,7 +320,6 @@ button:active {
   color: #f56565;
 }
 
-/* Favorites Section */
 #favorites-section {
   background: #2d3748;
   border-radius: 12px;
@@ -388,7 +378,6 @@ button:active {
   background: #c53030;
 }
 
-/* Favorite Route Dropdown Styles */
 .favorite-route-header {
   display: flex;
   justify-content: space-between;
@@ -501,7 +490,6 @@ button:active {
   font-size: 0.8rem;
 }
 
-/* Messages */
 .message {
   padding: 1rem 1.5rem;
   border-radius: 8px;
@@ -522,7 +510,6 @@ button:active {
   border-left: 4px solid #f56565;
 }
 
-/* Loading State */
 .loading {
   text-align: center;
   padding: 2rem;
@@ -530,7 +517,6 @@ button:active {
   font-style: italic;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .container {
     padding: 1rem;
@@ -557,7 +543,6 @@ button:active {
   }
 }
 
-/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -575,7 +560,6 @@ button:active {
   background: #38a169;
 }
 
-/* Login Page Styles */
 .login-container {
   min-height: 100vh;
   display: flex;
@@ -697,7 +681,6 @@ button:active {
   border: 1px solid #e53e3e;
 }
 
-/* Dashboard Styles */
 .dashboard-header {
   display: flex;
   justify-content: space-between;
@@ -806,7 +789,6 @@ button:active {
   background: #2d3748;
 }
 
-/* Routes Section Specific Styles */
 #routes-section {
   padding-top: 2rem !important;
 }

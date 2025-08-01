@@ -1,10 +1,8 @@
-// frontend/app.js
 let currentUser = null;
 let allRoutes = [];
 let selectedRoute = null;
 let currentTab = 'stops';
 
-// Check if we're on the login page or dashboard
 const isLoginPage = window.location.pathname === '/' || window.location.pathname === '/index.html';
 const isDashboardPage = window.location.pathname === '/dashboard.html';
 
@@ -40,17 +38,14 @@ function setLoading(isLoading) {
 
 function resetUI() {
   if (isLoginPage) {
-    // On login page, we don't need to reset any user info display
     return;
   }
   
-  // Hide sections when no user is logged in
   document.getElementById("routes-section").classList.remove("active");
   document.getElementById("favorites-section").classList.remove("active");
   document.getElementById("route-details-section").classList.remove("active");
   document.getElementById("current-user-display").innerText = "Welcome!";
   
-  // Clear lists
   document.getElementById("subway-routes").innerHTML = "";
   document.getElementById("light-rail-routes").innerHTML = "";
   document.getElementById("rail-routes").innerHTML = "";
@@ -59,7 +54,6 @@ function resetUI() {
   document.getElementById("route-tab-content").innerHTML = "";
   document.getElementById("selected-route-info").innerHTML = "";
   
-  // Reset state
   allRoutes = [];
   selectedRoute = null;
   currentTab = 'stops';
@@ -72,15 +66,12 @@ function displayUser(user) {
   }
   
   if (isLoginPage) {
-    // On login page, we don't need to display user info since we removed the element
-    // The success message will be shown via showMessage instead
   } else {
     document.getElementById("current-user-display").innerText = `Welcome, ${user.username}!`;
   }
 }
 
 function redirectToDashboard() {
-  // Store user info in sessionStorage so it's available on dashboard
   if (currentUser) {
     sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
   }
@@ -88,26 +79,21 @@ function redirectToDashboard() {
 }
 
 function goHome() {
-  // Show only the routes section, hide others
   document.getElementById("routes-section").classList.add("active");
   document.getElementById("favorites-section").classList.remove("active");
   document.getElementById("route-details-section").classList.remove("active");
   
-  // Update nav buttons
   document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
   document.querySelector('.nav-button[onclick="showSection(\'routes\')"]').classList.add('active');
   
-  // Close all route category dropdowns
   document.querySelectorAll('.route-list').forEach(list => {
     list.classList.add('collapsed');
   });
   
-  // Update toggle icons to show '+'
   document.querySelectorAll('.toggle-icon').forEach(icon => {
     icon.textContent = '+';
   });
   
-  // Hide "Back to Home" button since we're on routes (home)
   const homeButtons = document.querySelectorAll('.btn-home');
   homeButtons.forEach(button => {
     button.style.display = 'none';
@@ -115,19 +101,15 @@ function goHome() {
 }
 
 function showSection(sectionName) {
-  // Hide all sections
   document.querySelectorAll('.dashboard-section').forEach(section => {
     section.classList.remove('active');
   });
   
-  // Show selected section
   document.getElementById(`${sectionName}-section`).classList.add('active');
   
-  // Update nav buttons
   document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
   event.target.classList.add('active');
   
-  // Show/hide "Back to Home" button based on current section
   const homeButtons = document.querySelectorAll('.btn-home');
   homeButtons.forEach(button => {
     if (sectionName === 'routes') {
@@ -137,30 +119,24 @@ function showSection(sectionName) {
     }
   });
   
-  // If switching to routes section, reset the routes UI
-  if (sectionName === 'routes') {
-    // Hide route details section
+    if (sectionName === 'routes') {
     document.getElementById('route-details-section').classList.remove('active');
-    
-    // Collapse all route category dropdowns
+
     document.querySelectorAll('.route-list').forEach(list => {
       list.classList.add('collapsed');
     });
-    
-    // Reset toggle icons to '+'
+
     document.querySelectorAll('.toggle-icon').forEach(icon => {
       icon.textContent = '+';
     });
-    
-    // Clear any selected route
+
     selectedRoute = null;
-    
-    // Clear route details content
+
     const routeDetailsInfo = document.getElementById('selected-route-info');
     if (routeDetailsInfo) {
       routeDetailsInfo.innerHTML = '';
     }
-    
+
     const routeTabContent = document.getElementById('route-tab-content');
     if (routeTabContent) {
       routeTabContent.innerHTML = '';
@@ -200,7 +176,6 @@ async function createUser() {
     
     showMessage('User created successfully! Redirecting to dashboard...');
     
-    // Redirect to dashboard after successful login
     setTimeout(() => {
       redirectToDashboard();
     }, 1500);
@@ -222,7 +197,6 @@ async function loadUser() {
 
   setLoading(true);
   try {
-    // Search for user by username
     const res = await fetch(`/users/username/${encodeURIComponent(username)}`);
     
     if (!res.ok) {
@@ -236,7 +210,6 @@ async function loadUser() {
     
     showMessage(`User ${user.username} loaded successfully! Redirecting to dashboard...`);
     
-    // Redirect to dashboard after successful login
     setTimeout(() => {
       redirectToDashboard();
     }, 1500);
@@ -274,7 +247,6 @@ async function loadRoutes() {
 }
 
 function displayRoutes(routes) {
-  // Clear all route lists
   document.getElementById("subway-routes").innerHTML = "";
   document.getElementById("light-rail-routes").innerHTML = "";
   document.getElementById("rail-routes").innerHTML = "";
@@ -288,7 +260,6 @@ function displayRoutes(routes) {
     return;
   }
   
-  // Group routes by type
   const routeGroups = {
     subway: routes.filter(route => route.route_type === 1),
     lightRail: routes.filter(route => route.route_type === 0),
@@ -296,7 +267,6 @@ function displayRoutes(routes) {
     bus: routes.filter(route => route.route_type === 3)
   };
   
-  // Display routes in each category
   displayRouteGroup('subway-routes', routeGroups.subway);
   displayRouteGroup('light-rail-routes', routeGroups.lightRail);
   displayRouteGroup('rail-routes', routeGroups.rail);
@@ -366,7 +336,6 @@ function toggleCategory(category) {
 function selectRoute(route) {
   selectedRoute = route;
   
-  // Display route info
   const infoDiv = document.getElementById("selected-route-info");
   infoDiv.innerHTML = `
     <h3>${route.long_name || route.short_name}</h3>
@@ -374,40 +343,33 @@ function selectRoute(route) {
     <p><strong>Type:</strong> ${getRouteTypeName(route.route_type)}</p>
   `;
   
-  // Hide other sections and show route details
   document.querySelectorAll('.dashboard-section').forEach(section => {
     section.classList.remove('active');
   });
   document.getElementById("route-details-section").classList.add("active");
   
-  // Show "Back to Home" button since we're viewing route details
   const homeButtons = document.querySelectorAll('.btn-home');
   homeButtons.forEach(button => {
     button.style.display = 'block';
   });
   
-  // Load initial tab content
   showRouteTab('stops');
   
-  // Scroll to route details
   document.getElementById("route-details-section").scrollIntoView({ behavior: 'smooth' });
 }
 
 function showRouteTab(tabName) {
   currentTab = tabName;
   
-  // Update tab buttons
   document.querySelectorAll('.tab-button').forEach(btn => {
     btn.classList.remove('active');
   });
   
-  // Find the clicked button and make it active
   const clickedButton = event.target;
   if (clickedButton && clickedButton.classList.contains('tab-button')) {
     clickedButton.classList.add('active');
   }
   
-  // Load tab content
   loadTabContent(tabName);
 }
 
@@ -477,7 +439,6 @@ async function loadLiveVehicles() {
     return;
   }
   
-  // Fetch stop information for each vehicle
   const vehiclesWithStops = await Promise.all(
     vehicles.map(async (vehicle) => {
       if (vehicle.stop_id) {
@@ -499,16 +460,13 @@ async function loadLiveVehicles() {
   vehiclesWithStops.forEach(vehicle => {
     const location = vehicle.stop_name || `Stop ID: ${vehicle.stop_id}`;
     
-    // Format occupancy information
     let occupancyText = 'No occupancy data available';
     if (vehicle.occupancy_status && vehicle.occupancy_status !== '') {
-      // Convert occupancy status to readable format
       let statusText = vehicle.occupancy_status.toLowerCase().replace(/_/g, ' ');
       statusText = statusText.charAt(0).toUpperCase() + statusText.slice(1);
       occupancyText = `${statusText} (${vehicle.occupancy_percentage || 0}%)`;
     }
     
-    // Convert status to human-readable format
     let statusText = '';
     switch (vehicle.status) {
       case 'INCOMING_AT':
@@ -550,7 +508,6 @@ async function loadRouteAlerts() {
       return;
     }
     
-    // Filter alerts that are relevant to this route (route_id in any informed_entity)
     const relevantAlerts = alerts.filter(alert => {
       if (!alert.alert || !alert.alert.informed_entity) return false;
       return alert.alert.informed_entity.some(entity => entity.route_id === selectedRoute.route_id);
@@ -606,10 +563,8 @@ async function loadFavorites() {
     
     favorites.forEach(fav => {
       const li = document.createElement("li");
-      // Display the route name if available, otherwise fall back to ID
       const displayName = fav.item_name || `${fav.type.toUpperCase()} - ${fav.item_id}`;
       
-      // Make the favorite clickable if it's a route
       if (fav.type === 'route') {
         li.innerHTML = `
           <div class="favorite-route-header">
@@ -626,9 +581,7 @@ async function loadFavorites() {
           </div>
         `;
         
-        // Add click handler to the entire list item
         li.onclick = function(e) {
-          // Don't trigger if clicking on the remove button
           if (e.target.tagName === 'BUTTON') {
             return;
           }
@@ -704,7 +657,6 @@ function toggleFavoriteRouteDetails(routeId) {
   const detailsDiv = document.getElementById(`favorite-route-${routeId}`);
   if (detailsDiv.style.display === 'none') {
     detailsDiv.style.display = 'block';
-    // Load initial content (stops)
     showFavoriteRouteTab(routeId, 'stops');
   } else {
     detailsDiv.style.display = 'none';
@@ -712,12 +664,10 @@ function toggleFavoriteRouteDetails(routeId) {
 }
 
 function showFavoriteRouteTab(routeId, tabName) {
-  // Update tab buttons
   const tabButtons = document.querySelectorAll(`#favorite-route-${routeId} .favorite-tab-button`);
   tabButtons.forEach(btn => btn.classList.remove('active'));
   event.target.classList.add('active');
   
-  // Load tab content
   loadFavoriteRouteTabContent(routeId, tabName);
 }
 
@@ -779,7 +729,6 @@ async function loadFavoriteRouteLiveVehicles(routeId) {
     return;
   }
   
-  // Fetch stop information for each vehicle
   const vehiclesWithStops = await Promise.all(
     vehicles.map(async (vehicle) => {
       if (vehicle.stop_id) {
@@ -801,7 +750,6 @@ async function loadFavoriteRouteLiveVehicles(routeId) {
   vehiclesWithStops.forEach(vehicle => {
     const location = vehicle.stop_name || `Stop ID: ${vehicle.stop_id}`;
     
-    // Format occupancy information
     let occupancyText = 'No occupancy data available';
     if (vehicle.occupancy_status && vehicle.occupancy_status !== '') {
       let statusText = vehicle.occupancy_status.toLowerCase().replace(/_/g, ' ');
@@ -809,7 +757,6 @@ async function loadFavoriteRouteLiveVehicles(routeId) {
       occupancyText = `${statusText} (${vehicle.occupancy_percentage || 0}%)`;
     }
     
-    // Convert status to human-readable format
     let statusText = '';
     switch (vehicle.status) {
       case 'INCOMING_AT':
@@ -844,7 +791,6 @@ async function loadFavoriteRouteAlerts(routeId) {
   const alerts = await res.json();
   const contentDiv = document.getElementById(`favorite-route-content-${routeId}`);
   
-  // Filter alerts for this specific route
   const routeAlerts = alerts.filter(alert => 
     alert.alert && 
     alert.alert.informed_entity && 
@@ -876,22 +822,18 @@ async function loadFavoriteRouteAlerts(routeId) {
   contentDiv.innerHTML = html;
 }
 
-// Initialize UI on page load
 document.addEventListener('DOMContentLoaded', function() {
   resetUI();
 });
 
-// Initialize dashboard if on dashboard page
 if (isDashboardPage) {
   document.addEventListener('DOMContentLoaded', async () => {
     try {
-      // Restore user from sessionStorage
       const storedUser = sessionStorage.getItem('currentUser');
       if (storedUser) {
         currentUser = JSON.parse(storedUser);
         displayUser(currentUser);
       } else {
-        // No user found, redirect to login
         window.location.href = '/';
         return;
       }
@@ -899,16 +841,13 @@ if (isDashboardPage) {
       await loadRoutes();
       await loadFavorites();
       
-      // Show routes section by default
       document.getElementById("routes-section").classList.add("active");
       document.getElementById("favorites-section").classList.remove("active");
       document.getElementById("route-details-section").classList.remove("active");
       
-      // Set routes nav button as active
       document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
       document.querySelector('.nav-button[onclick="showSection(\'routes\')"]').classList.add('active');
       
-      // Hide "Back to Home" button since we're on routes (home)
       const homeButtons = document.querySelectorAll('.btn-home');
       homeButtons.forEach(button => {
         button.style.display = 'none';
