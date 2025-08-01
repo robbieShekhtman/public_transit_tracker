@@ -1,6 +1,6 @@
-FROM golang:1.23.4-slim
+FROM golang:1.23.4
 
-WORKDIR /app
+WORKDIR /root/
 
 COPY go.mod go.sum ./
 RUN go mod download
