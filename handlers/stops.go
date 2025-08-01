@@ -57,6 +57,69 @@ func GetStops(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
+func GetStopsByRoute(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		routeID := c.Param("route_id")
+		if routeID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Route ID is required"})
+			return
+		}
+		query := `
+			SELECT DISTINCT s.stop_id, s.stop_name, s.stop_lat, s.stop_lon
+			FROM stops s
+			JOIN stop_times st ON s.stop_id = st.stop_id
+			JOIN trips t ON st.trip_id = t.trip_id
+			JOIN routes r ON t.route_id = r.route_id
+			WHERE r.route_id = $1
+			ORDER BY s.stop_name
+		`
+
+		rows, err := db.Query(query, routeID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		defer rows.Close()
+
+		var stops []Stop
+		for rows.Next() {
+			var (
+				id   string
+				name string
+				lat  sql.NullFloat64
+				lon  sql.NullFloat64
+			)
+
+			err := rows.Scan(&id, &name, &lat, &lon)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+
+			s := Stop{
+				StopID: id,
+				Name:   name,
+			}
+
+			if lat.Valid {
+				s.Lat = &lat.Float64
+			}
+			if lon.Valid {
+				s.Lon = &lon.Float64
+			}
+
+			stops = append(stops, s)
+		}
+
+		if len(stops) == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "No stops found for this route"})
+			return
+		}
+
+		c.JSON(http.StatusOK, stops)
+	}
+}
+
 func GetStopByID(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("stop_id")
