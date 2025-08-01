@@ -24,6 +24,53 @@ func ConnectDB() (*sql.DB, error) {
 	return sql.Open("postgres", connStr)
 }
 
+func LoadGTFS(db *sql.DB, filePath string) error {
+	var stopsCount, routesCount, tripsCount, stopTimesCount int
+
+	err := db.QueryRow("SELECT COUNT(*) FROM stops").Scan(&stopsCount)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = db.QueryRow("SELECT COUNT(*) FROM routes").Scan(&routesCount)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = db.QueryRow("SELECT COUNT(*) FROM trips").Scan(&tripsCount)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = db.QueryRow("SELECT COUNT(*) FROM stop_times").Scan(&stopTimesCount)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if stopsCount == 0 || routesCount == 0 || tripsCount == 0 || stopTimesCount == 0 {
+		err = LoadStops(db, "data/gtfs_static/stops.txt")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = LoadRoutes(db, "data/gtfs_static/routes.txt")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = LoadTrips(db, "data/gtfs_static/trips.txt")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = LoadStopTimes(db, "data/gtfs_static/stop_times.txt")
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	return nil
+}
+
 func LoadStops(db *sql.DB, filePath string) error {
 	f, err := os.Open(filePath)
 	if err != nil {

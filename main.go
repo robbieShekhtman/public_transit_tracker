@@ -21,6 +21,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	err = parser.LoadGTFS(db, "data/")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	r := handlers.SetupRouter(db)
 
 	port := ":8080"
