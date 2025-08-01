@@ -1,0 +1,67 @@
+<!-- frontend/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transit Tracker</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>MBTA Transit Tracker</h1>
+
+    <section id="user-section">
+      <h2>Create / Load User</h2>
+      <div class="input-group">
+        <input type="text" id="username" placeholder="Enter username" />
+        <button onclick="createUser()">Create User</button>
+        <button onclick="loadUser()">Load User</button>
+      </div>
+      <div id="user-info"></div>
+    </section>
+
+    <section id="routes-section" style="display:none;">
+      <h2>Available Routes</h2>
+      <div class="search-filters">
+        <input type="text" id="route-search" placeholder="Search routes..." oninput="filterRoutes()" />
+        <select id="route-type-filter" onchange="filterRoutes()">
+          <option value="">All Types</option>
+          <option value="0">Light Rail</option>
+          <option value="1">Subway</option>
+          <option value="2">Rail</option>
+          <option value="3">Bus</option>
+        </select>
+      </div>
+      <ul id="route-list"></ul>
+    </section>
+
+    <section id="route-details-section" style="display:none;">
+      <h2>Route Details</h2>
+      <div id="selected-route-info"></div>
+      
+      <div class="tab-container">
+        <div class="tab-buttons">
+          <button class="tab-button active" onclick="showRouteTab('trips')">Trips</button>
+          <button class="tab-button" onclick="showRouteTab('stops')">Stops</button>
+          <button class="tab-button" onclick="showRouteTab('live')">Live Vehicles</button>
+          <button class="tab-button" onclick="showRouteTab('alerts')">Alerts</button>
+        </div>
+        <div id="route-tab-content"></div>
+      </div>
+    </section>
+
+    <section id="favorites-section" style="display:none;">
+      <h2>Your Favorites</h2>
+      <ul id="favorites-list"></ul>
+    </section>
+
+    <section id="alerts-section" style="display:none;">
+      <h2>Service Alerts</h2>
+      <div id="alerts-content"></div>
+    </section>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
