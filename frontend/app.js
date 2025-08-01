@@ -2,13 +2,23 @@
 let currentUser = null;
 let allRoutes = [];
 let selectedRoute = null;
-let currentTab = 'trips';
+let currentTab = 'stops';
+
+// Check if we're on the login page or dashboard
+const isLoginPage = window.location.pathname === '/' || window.location.pathname === '/index.html';
+const isDashboardPage = window.location.pathname === '/dashboard.html';
 
 function showMessage(message, type = 'success') {
   const messageDiv = document.createElement('div');
   messageDiv.className = `message ${type}`;
-  messageDiv.textContent = message;
-  document.querySelector('.container').insertBefore(messageDiv, document.querySelector('section'));
+  
+  if (isLoginPage) {
+    messageDiv.textContent = message;
+    document.querySelector('.login-container').insertBefore(messageDiv, document.querySelector('.login-card'));
+  } else {
+    messageDiv.textContent = message;
+    document.querySelector('.container').insertBefore(messageDiv, document.querySelector('main'));
+  }
   
   setTimeout(() => {
     messageDiv.remove();
@@ -16,7 +26,9 @@ function showMessage(message, type = 'success') {
 }
 
 function setLoading(isLoading) {
-  const sections = document.querySelectorAll('section');
+  if (isLoginPage) return;
+  
+  const sections = document.querySelectorAll('.dashboard-section');
   sections.forEach(section => {
     if (isLoading) {
       section.classList.add('loading');
@@ -27,11 +39,16 @@ function setLoading(isLoading) {
 }
 
 function resetUI() {
+  if (isLoginPage) {
+    // On login page, we don't need to reset any user info display
+    return;
+  }
+  
   // Hide sections when no user is logged in
-  document.getElementById("routes-section").style.display = "none";
-  document.getElementById("favorites-section").style.display = "none";
-  document.getElementById("route-details-section").style.display = "none";
-  document.getElementById("user-info").innerText = "";
+  document.getElementById("routes-section").classList.remove("active");
+  document.getElementById("favorites-section").classList.remove("active");
+  document.getElementById("route-details-section").classList.remove("active");
+  document.getElementById("current-user-display").innerText = "Welcome!";
   
   // Clear lists
   document.getElementById("subway-routes").innerHTML = "";
@@ -54,9 +71,107 @@ function displayUser(user) {
     return;
   }
   
-  document.getElementById("user-info").innerText = `Logged in as ${user.username}`;
-  document.getElementById("routes-section").style.display = "block";
-  document.getElementById("favorites-section").style.display = "block";
+  if (isLoginPage) {
+    // On login page, we don't need to display user info since we removed the element
+    // The success message will be shown via showMessage instead
+  } else {
+    document.getElementById("current-user-display").innerText = `Welcome, ${user.username}!`;
+  }
+}
+
+function redirectToDashboard() {
+  // Store user info in sessionStorage so it's available on dashboard
+  if (currentUser) {
+    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+  }
+  window.location.href = '/dashboard.html';
+}
+
+function goHome() {
+  // Show only the routes section, hide others
+  document.getElementById("routes-section").classList.add("active");
+  document.getElementById("favorites-section").classList.remove("active");
+  document.getElementById("route-details-section").classList.remove("active");
+  
+  // Update nav buttons
+  document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+  document.querySelector('.nav-button[onclick="showSection(\'routes\')"]').classList.add('active');
+  
+  // Close all route category dropdowns
+  document.querySelectorAll('.route-list').forEach(list => {
+    list.classList.add('collapsed');
+  });
+  
+  // Update toggle icons to show '+'
+  document.querySelectorAll('.toggle-icon').forEach(icon => {
+    icon.textContent = '+';
+  });
+  
+  // Hide "Back to Home" button since we're on routes (home)
+  const homeButtons = document.querySelectorAll('.btn-home');
+  homeButtons.forEach(button => {
+    button.style.display = 'none';
+  });
+}
+
+function showSection(sectionName) {
+  // Hide all sections
+  document.querySelectorAll('.dashboard-section').forEach(section => {
+    section.classList.remove('active');
+  });
+  
+  // Show selected section
+  document.getElementById(`${sectionName}-section`).classList.add('active');
+  
+  // Update nav buttons
+  document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  // Show/hide "Back to Home" button based on current section
+  const homeButtons = document.querySelectorAll('.btn-home');
+  homeButtons.forEach(button => {
+    if (sectionName === 'routes') {
+      button.style.display = 'none';
+    } else {
+      button.style.display = 'block';
+    }
+  });
+  
+  // If switching to routes section, reset the routes UI
+  if (sectionName === 'routes') {
+    // Hide route details section
+    document.getElementById('route-details-section').classList.remove('active');
+    
+    // Collapse all route category dropdowns
+    document.querySelectorAll('.route-list').forEach(list => {
+      list.classList.add('collapsed');
+    });
+    
+    // Reset toggle icons to '+'
+    document.querySelectorAll('.toggle-icon').forEach(icon => {
+      icon.textContent = '+';
+    });
+    
+    // Clear any selected route
+    selectedRoute = null;
+    
+    // Clear route details content
+    const routeDetailsInfo = document.getElementById('selected-route-info');
+    if (routeDetailsInfo) {
+      routeDetailsInfo.innerHTML = '';
+    }
+    
+    const routeTabContent = document.getElementById('route-tab-content');
+    if (routeTabContent) {
+      routeTabContent.innerHTML = '';
+    }
+  }
+}
+
+function logout() {
+  currentUser = null;
+  sessionStorage.removeItem('currentUser');
+  window.location.href = '/';
 }
 
 async function createUser() {
@@ -83,10 +198,12 @@ async function createUser() {
     currentUser = user;
     displayUser(user);
     
-    // Only load routes and favorites if user was successfully created
-    await loadRoutes();
-    await loadFavorites();
-    showMessage('User created successfully!');
+    showMessage('User created successfully! Redirecting to dashboard...');
+    
+    // Redirect to dashboard after successful login
+    setTimeout(() => {
+      redirectToDashboard();
+    }, 1500);
   } catch (error) {
     showMessage('Error creating user: ' + error.message, 'error');
     currentUser = null;
@@ -117,10 +234,12 @@ async function loadUser() {
     currentUser = user;
     displayUser(user);
     
-    // Only load routes and favorites if user was successfully loaded
-    await loadRoutes();
-    await loadFavorites();
-    showMessage(`User ${user.username} loaded successfully!`);
+    showMessage(`User ${user.username} loaded successfully! Redirecting to dashboard...`);
+    
+    // Redirect to dashboard after successful login
+    setTimeout(() => {
+      redirectToDashboard();
+    }, 1500);
   } catch (error) {
     showMessage('Error loading user: ' + error.message, 'error');
     currentUser = null;
@@ -255,8 +374,17 @@ function selectRoute(route) {
     <p><strong>Type:</strong> ${getRouteTypeName(route.route_type)}</p>
   `;
   
-  // Show route details section
-  document.getElementById("route-details-section").style.display = "block";
+  // Hide other sections and show route details
+  document.querySelectorAll('.dashboard-section').forEach(section => {
+    section.classList.remove('active');
+  });
+  document.getElementById("route-details-section").classList.add("active");
+  
+  // Show "Back to Home" button since we're viewing route details
+  const homeButtons = document.querySelectorAll('.btn-home');
+  homeButtons.forEach(button => {
+    button.style.display = 'block';
+  });
   
   // Load initial tab content
   showRouteTab('stops');
@@ -480,10 +608,38 @@ async function loadFavorites() {
       const li = document.createElement("li");
       // Display the route name if available, otherwise fall back to ID
       const displayName = fav.item_name || `${fav.type.toUpperCase()} - ${fav.item_id}`;
-      li.innerHTML = `
-        <span>${displayName}</span>
-        <button onclick="deleteFavorite('${fav.item_id}', '${fav.type}')">Remove</button>
-      `;
+      
+      // Make the favorite clickable if it's a route
+      if (fav.type === 'route') {
+        li.innerHTML = `
+          <div class="favorite-route-header">
+            <span style="color: #48bb78;">${displayName}</span>
+            <button onclick="deleteFavorite('${fav.item_id}', '${fav.type}')">Remove</button>
+          </div>
+          <div id="favorite-route-${fav.item_id}" class="favorite-route-details" style="display: none;">
+            <div class="favorite-route-tabs">
+              <button class="favorite-tab-button active" onclick="showFavoriteRouteTab('${fav.item_id}', 'stops')">Stops</button>
+              <button class="favorite-tab-button" onclick="showFavoriteRouteTab('${fav.item_id}', 'live')">Live Vehicles</button>
+              <button class="favorite-tab-button" onclick="showFavoriteRouteTab('${fav.item_id}', 'alerts')">Alerts</button>
+            </div>
+            <div id="favorite-route-content-${fav.item_id}" class="favorite-route-content"></div>
+          </div>
+        `;
+        
+        // Add click handler to the entire list item
+        li.onclick = function(e) {
+          // Don't trigger if clicking on the remove button
+          if (e.target.tagName === 'BUTTON') {
+            return;
+          }
+          toggleFavoriteRouteDetails(fav.item_id);
+        };
+      } else {
+        li.innerHTML = `
+          <span>${displayName}</span>
+          <button onclick="deleteFavorite('${fav.item_id}', '${fav.type}')">Remove</button>
+        `;
+      }
       ul.appendChild(li);
     });
   } catch (error) {
@@ -544,7 +700,221 @@ async function deleteFavorite(itemID, itemType) {
   }
 }
 
+function toggleFavoriteRouteDetails(routeId) {
+  const detailsDiv = document.getElementById(`favorite-route-${routeId}`);
+  if (detailsDiv.style.display === 'none') {
+    detailsDiv.style.display = 'block';
+    // Load initial content (stops)
+    showFavoriteRouteTab(routeId, 'stops');
+  } else {
+    detailsDiv.style.display = 'none';
+  }
+}
+
+function showFavoriteRouteTab(routeId, tabName) {
+  // Update tab buttons
+  const tabButtons = document.querySelectorAll(`#favorite-route-${routeId} .favorite-tab-button`);
+  tabButtons.forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  // Load tab content
+  loadFavoriteRouteTabContent(routeId, tabName);
+}
+
+async function loadFavoriteRouteTabContent(routeId, tabName) {
+  const contentDiv = document.getElementById(`favorite-route-content-${routeId}`);
+  contentDiv.innerHTML = '<div style="text-align: center; padding: 1rem;">Loading...</div>';
+  
+  try {
+    switch (tabName) {
+      case 'stops':
+        await loadFavoriteRouteStops(routeId);
+        break;
+      case 'live':
+        await loadFavoriteRouteLiveVehicles(routeId);
+        break;
+      case 'alerts':
+        await loadFavoriteRouteAlerts(routeId);
+        break;
+    }
+  } catch (error) {
+    contentDiv.innerHTML = `<div style="text-align: center; color: #f56565; padding: 1rem;">Error loading ${tabName}: ${error.message}</div>`;
+  }
+}
+
+async function loadFavoriteRouteStops(routeId) {
+  const res = await fetch(`/routes/${routeId}/stops`);
+  if (!res.ok) throw new Error('Failed to load stops');
+  
+  const stops = await res.json();
+  const contentDiv = document.getElementById(`favorite-route-content-${routeId}`);
+  
+  if (!Array.isArray(stops) || stops.length === 0) {
+    contentDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 1rem;">No stops available for this route</div>';
+    return;
+  }
+  
+  let html = '<div class="favorite-stops-list">';
+  stops.forEach(stop => {
+    html += `
+      <div class="favorite-stop-item">
+        <strong>${stop.stop_name || 'Unnamed Stop'}</strong>
+        <small>ID: ${stop.stop_id}</small>
+      </div>
+    `;
+  });
+  html += '</div>';
+  contentDiv.innerHTML = html;
+}
+
+async function loadFavoriteRouteLiveVehicles(routeId) {
+  const res = await fetch(`/live/${routeId}`);
+  if (!res.ok) throw new Error('Failed to load live vehicles');
+  
+  const vehicles = await res.json();
+  const contentDiv = document.getElementById(`favorite-route-content-${routeId}`);
+  
+  if (!Array.isArray(vehicles) || vehicles.length === 0) {
+    contentDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 1rem;">No live vehicles available for this route</div>';
+    return;
+  }
+  
+  // Fetch stop information for each vehicle
+  const vehiclesWithStops = await Promise.all(
+    vehicles.map(async (vehicle) => {
+      if (vehicle.stop_id) {
+        try {
+          const stopRes = await fetch(`/stops/${vehicle.stop_id}`);
+          if (stopRes.ok) {
+            const stop = await stopRes.json();
+            return { ...vehicle, stop_name: stop.stop_name };
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch stop info for ${vehicle.stop_id}:`, error);
+        }
+      }
+      return vehicle;
+    })
+  );
+  
+  let html = '<div class="favorite-vehicles-list">';
+  vehiclesWithStops.forEach(vehicle => {
+    const location = vehicle.stop_name || `Stop ID: ${vehicle.stop_id}`;
+    
+    // Format occupancy information
+    let occupancyText = 'No occupancy data available';
+    if (vehicle.occupancy_status && vehicle.occupancy_status !== '') {
+      let statusText = vehicle.occupancy_status.toLowerCase().replace(/_/g, ' ');
+      statusText = statusText.charAt(0).toUpperCase() + statusText.slice(1);
+      occupancyText = `${statusText} (${vehicle.occupancy_percentage || 0}%)`;
+    }
+    
+    // Convert status to human-readable format
+    let statusText = '';
+    switch (vehicle.status) {
+      case 'INCOMING_AT':
+        statusText = `Arriving at ${location}`;
+        break;
+      case 'STOPPED_AT':
+        statusText = `Stopped at ${location}`;
+        break;
+      case 'IN_TRANSIT_TO':
+        statusText = `In transit to ${location}`;
+        break;
+      default:
+        statusText = `${vehicle.status} ${location}`;
+    }
+    
+    html += `
+      <div class="favorite-vehicle-item">
+        <strong>Vehicle ${vehicle.vehicle_id}</strong>
+        <div>${statusText}</div>
+        <small>Occupancy: ${occupancyText}</small>
+      </div>
+    `;
+  });
+  html += '</div>';
+  contentDiv.innerHTML = html;
+}
+
+async function loadFavoriteRouteAlerts(routeId) {
+  const res = await fetch('/alerts');
+  if (!res.ok) throw new Error('Failed to load alerts');
+  
+  const alerts = await res.json();
+  const contentDiv = document.getElementById(`favorite-route-content-${routeId}`);
+  
+  // Filter alerts for this specific route
+  const routeAlerts = alerts.filter(alert => 
+    alert.alert && 
+    alert.alert.informed_entity && 
+    alert.alert.informed_entity.some(entity => 
+      entity.route_id === routeId
+    )
+  );
+  
+  if (routeAlerts.length === 0) {
+    contentDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 1rem;">No alerts for this route</div>';
+    return;
+  }
+  
+  let html = '<div class="favorite-alerts-list">';
+  routeAlerts.forEach(alert => {
+    const headerText = alert.alert.header_text?.translation?.[0]?.text || 'No header';
+    const descriptionText = alert.alert.description_text?.translation?.[0]?.text || '';
+    const effect = alert.alert.effect || 'Unknown';
+    
+    html += `
+      <div class="favorite-alert-item">
+        <strong>${headerText}</strong>
+        ${descriptionText ? `<div>${descriptionText}</div>` : ''}
+        <small>Effect: ${effect}</small>
+      </div>
+    `;
+  });
+  html += '</div>';
+  contentDiv.innerHTML = html;
+}
+
 // Initialize UI on page load
 document.addEventListener('DOMContentLoaded', function() {
   resetUI();
 });
+
+// Initialize dashboard if on dashboard page
+if (isDashboardPage) {
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      // Restore user from sessionStorage
+      const storedUser = sessionStorage.getItem('currentUser');
+      if (storedUser) {
+        currentUser = JSON.parse(storedUser);
+        displayUser(currentUser);
+      } else {
+        // No user found, redirect to login
+        window.location.href = '/';
+        return;
+      }
+      
+      await loadRoutes();
+      await loadFavorites();
+      
+      // Show routes section by default
+      document.getElementById("routes-section").classList.add("active");
+      document.getElementById("favorites-section").classList.remove("active");
+      document.getElementById("route-details-section").classList.remove("active");
+      
+      // Set routes nav button as active
+      document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+      document.querySelector('.nav-button[onclick="showSection(\'routes\')"]').classList.add('active');
+      
+      // Hide "Back to Home" button since we're on routes (home)
+      const homeButtons = document.querySelectorAll('.btn-home');
+      homeButtons.forEach(button => {
+        button.style.display = 'none';
+      });
+    } catch (error) {
+      console.error('Error initializing dashboard:', error);
+    }
+  });
+}

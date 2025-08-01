@@ -1,0 +1,104 @@
+<!-- frontend/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transit Tracker - Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="dashboard-header">
+      <h1>MBTA Transit Tracker</h1>
+      <div class="user-info">
+        <span id="current-user-display">Welcome!</span>
+        <button onclick="logout()" class="btn-logout">Logout</button>
+      </div>
+    </header>
+
+    <nav class="dashboard-nav">
+      <button class="nav-button active" onclick="showSection('routes')">Routes</button>
+      <button class="nav-button" onclick="showSection('favorites')">Favorites</button>
+    </nav>
+
+    <main class="dashboard-content">
+      <!-- Routes Section -->
+      <section id="routes-section" class="dashboard-section active">
+        <div class="section-header">
+          <h2>Available Routes</h2>
+          <button onclick="goHome()" class="btn-home">← Back to Home</button>
+        </div>
+        
+        <div class="search-filters">
+          <input type="text" id="route-search" placeholder="Search routes..." oninput="filterRoutes()" />
+        </div>
+        
+        <div class="route-categories">
+          <div class="route-category">
+            <div class="category-header" onclick="toggleCategory('subway')">
+              <h3>Subway</h3>
+              <span class="toggle-icon">+</span>
+            </div>
+            <ul id="subway-routes" class="route-list collapsed"></ul>
+          </div>
+          
+          <div class="route-category">
+            <div class="category-header" onclick="toggleCategory('light-rail')">
+              <h3>Light Rail</h3>
+              <span class="toggle-icon">+</span>
+            </div>
+            <ul id="light-rail-routes" class="route-list collapsed"></ul>
+          </div>
+          
+          <div class="route-category">
+            <div class="category-header" onclick="toggleCategory('rail')">
+              <h3>Rail</h3>
+              <span class="toggle-icon">+</span>
+            </div>
+            <ul id="rail-routes" class="route-list collapsed"></ul>
+          </div>
+          
+          <div class="route-category">
+            <div class="category-header" onclick="toggleCategory('bus')">
+              <h3>Bus</h3>
+              <span class="toggle-icon">+</span>
+            </div>
+            <ul id="bus-routes" class="route-list collapsed"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Favorites Section -->
+      <section id="favorites-section" class="dashboard-section">
+        <div class="section-header">
+          <h2>Your Favorites</h2>
+          <button onclick="goHome()" class="btn-home">← Back to Home</button>
+        </div>
+        <ul id="favorites-list"></ul>
+      </section>
+
+      <!-- Route Details Section -->
+      <section id="route-details-section" class="dashboard-section">
+        <div class="section-header">
+          <h2>Route Details</h2>
+          <button onclick="goHome()" class="btn-home">← Back to Home</button>
+        </div>
+        
+        <div id="selected-route-info"></div>
+        
+        <div class="tab-container">
+          <div class="tab-buttons">
+            <button class="tab-button" onclick="showRouteTab('stops')">Stops</button>
+            <button class="tab-button" onclick="showRouteTab('live')">Live Vehicles</button>
+            <button class="tab-button" onclick="showRouteTab('alerts')">Alerts</button>
+          </div>
+          <div id="route-tab-content"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html> 

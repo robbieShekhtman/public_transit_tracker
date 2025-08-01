@@ -4,82 +4,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Transit Tracker</title>
+  <title>Transit Tracker - Login</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <div class="container">
-    <h1>MBTA Transit Tracker</h1>
-
-    <section id="user-section">
-      <h2>Create / Load User</h2>
-      <div class="input-group">
-        <input type="text" id="username" placeholder="Enter username" />
-        <button onclick="createUser()">Create User</button>
-        <button onclick="loadUser()">Load User</button>
-      </div>
-      <div id="user-info"></div>
-    </section>
-
-    <section id="routes-section" style="display:none;">
-      <h2>Available Routes</h2>
-      <div class="search-filters">
-        <input type="text" id="route-search" placeholder="Search routes..." oninput="filterRoutes()" />
-      </div>
+  <div class="login-container">
+    <div class="login-card">
+      <h1>MBTA Transit Tracker</h1>
+      <p class="login-subtitle">Sign in to access your transit dashboard</p>
       
-      <div class="route-categories">
-        <div class="route-category">
-          <div class="category-header" onclick="toggleCategory('subway')">
-            <h3>Subway</h3>
-            <span class="toggle-icon">+</span>
-          </div>
-          <ul id="subway-routes" class="route-list collapsed"></ul>
+      <form id="login-form" class="login-form">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="Enter your username" required />
         </div>
         
-        <div class="route-category">
-          <div class="category-header" onclick="toggleCategory('light-rail')">
-            <h3>Light Rail</h3>
-            <span class="toggle-icon">+</span>
-          </div>
-          <ul id="light-rail-routes" class="route-list collapsed"></ul>
+        <div class="form-actions">
+          <button type="button" onclick="createUser()" class="btn-primary">Create Account</button>
+          <button type="button" onclick="loadUser()" class="btn-secondary">Log In</button>
         </div>
-        
-        <div class="route-category">
-          <div class="category-header" onclick="toggleCategory('rail')">
-            <h3>Rail</h3>
-            <span class="toggle-icon">+</span>
-          </div>
-          <ul id="rail-routes" class="route-list collapsed"></ul>
-        </div>
-        
-        <div class="route-category">
-          <div class="category-header" onclick="toggleCategory('bus')">
-            <h3>Bus</h3>
-            <span class="toggle-icon">+</span>
-          </div>
-          <ul id="bus-routes" class="route-list collapsed"></ul>
-        </div>
-      </div>
-    </section>
-
-    <section id="route-details-section" style="display:none;">
-      <h2>Route Details</h2>
-      <div id="selected-route-info"></div>
-      
-      <div class="tab-container">
-        <div class="tab-buttons">
-          <button class="tab-button" onclick="showRouteTab('stops')">Stops</button>
-          <button class="tab-button" onclick="showRouteTab('live')">Live Vehicles</button>
-          <button class="tab-button" onclick="showRouteTab('alerts')">Alerts</button>
-        </div>
-        <div id="route-tab-content"></div>
-      </div>
-    </section>
-
-    <section id="favorites-section" style="display:none;">
-      <h2>Your Favorites</h2>
-      <ul id="favorites-list"></ul>
-    </section>
+      </form>
+    </div>
   </div>
 
   <script src="/static/app.js"></script>
