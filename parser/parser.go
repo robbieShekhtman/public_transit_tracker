@@ -48,22 +48,22 @@ func LoadGTFS(db *sql.DB, filePath string) error {
 	}
 
 	if stopsCount == 0 || routesCount == 0 || tripsCount == 0 || stopTimesCount == 0 {
-		err = LoadStops(db, "data/stops.txt")
+		err = LoadStops(db, "data/gtfs_static/stops.txt")
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		err = LoadRoutes(db, "data/routes.txt")
+		err = LoadRoutes(db, "data/gtfs_static/routes.txt")
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		err = LoadTrips(db, "data/trips.txt")
+		err = LoadTrips(db, "data/gtfs_static/trips.txt")
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		err = LoadStopTimes(db, "data/stop_times.txt")
+		err = LoadStopTimes(db, "data/gtfs_static/stop_times.txt")
 		if err != nil {
 			log.Fatal(err)
 		}
