@@ -21,6 +21,7 @@ func SetupRouter(db *sql.DB) *gin.Engine {
 	api.GET("/trip-updates/:route_id", GetTripUpdates())
 	api.POST("/users", CreateUser(db))
 	api.GET("/users/:id", GetUserByID(db))
+	api.GET("/users/username/:username", GetUserByUsername(db))
 	api.POST("/users/:id/favorites", AddFavorite(db))
 	api.GET("/users/:id/favorites", GetFavorites(db))
 	api.DELETE("/users/:id/favorites/:type/:item_id", DeleteFavorite(db))

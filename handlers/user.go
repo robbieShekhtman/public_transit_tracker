@@ -52,3 +52,25 @@ func GetUserByID(db *sql.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, user)
 	}
 }
+
+func GetUserByUsername(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		username := c.Param("username")
+		if username == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Username parameter is required"})
+			return
+		}
+
+		user, err := models.GetUserByUsername(db, username)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			}
+			return
+		}
+
+		c.JSON(http.StatusOK, user)
+	}
+}
