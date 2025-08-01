@@ -2,9 +2,7 @@ package handlers
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -114,7 +112,6 @@ func GetStopsByRoute(db *sql.DB) gin.HandlerFunc {
 			}
 
 			stops = append(stops, s)
-			fmt.Fprintf(os.Stdout, "%s %s\n", s.StopID, s.Name)
 		}
 
 		if len(stops) == 0 {
