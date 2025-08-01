@@ -45,7 +45,7 @@ function resetUI() {
   // Reset state
   allRoutes = [];
   selectedRoute = null;
-  currentTab = 'trips';
+  currentTab = 'stops';
 }
 
 function displayUser(user) {
@@ -246,18 +246,20 @@ function toggleCategory(category) {
 
 function selectRoute(route) {
   selectedRoute = route;
-  document.getElementById("route-details-section").style.display = "block";
   
-  // Update selected route info
-  const routeInfo = document.getElementById("selected-route-info");
-  routeInfo.innerHTML = `
-    <h3>${route.long_name || route.short_name || 'Unnamed Route'}</h3>
-    <p><strong>Type:</strong> ${getRouteTypeName(route.route_type)}</p>
+  // Display route info
+  const infoDiv = document.getElementById("selected-route-info");
+  infoDiv.innerHTML = `
+    <h3>${route.long_name || route.short_name}</h3>
     <p><strong>Route ID:</strong> ${route.route_id}</p>
+    <p><strong>Type:</strong> ${getRouteTypeName(route.route_type)}</p>
   `;
   
+  // Show route details section
+  document.getElementById("route-details-section").style.display = "block";
+  
   // Load initial tab content
-  showRouteTab('trips');
+  showRouteTab('stops');
   
   // Scroll to route details
   document.getElementById("route-details-section").scrollIntoView({ behavior: 'smooth' });
@@ -289,9 +291,6 @@ async function loadTabContent(tabName) {
   
   try {
     switch (tabName) {
-      case 'trips':
-        await loadRouteTrips();
-        break;
       case 'stops':
         await loadRouteStops();
         break;
@@ -305,32 +304,6 @@ async function loadTabContent(tabName) {
   } catch (error) {
     contentDiv.innerHTML = `<div style="text-align: center; color: #f56565; padding: 2rem;">Error loading ${tabName}: ${error.message}</div>`;
   }
-}
-
-async function loadRouteTrips() {
-  const res = await fetch(`/routes/${selectedRoute.route_id}/trips`);
-  if (!res.ok) throw new Error('Failed to load trips');
-  
-  const trips = await res.json();
-  const contentDiv = document.getElementById("route-tab-content");
-  
-  if (!Array.isArray(trips) || trips.length === 0) {
-    contentDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No trips available for this route</div>';
-    return;
-  }
-  
-  let html = '<div class="trips-list">';
-  trips.forEach(trip => {
-    html += `
-      <div class="trip-item">
-        <h4>Trip ${trip.trip_id}</h4>
-        <p><strong>Service:</strong> ${trip.service_id}</p>
-        <p><strong>Direction:</strong> ${trip.direction_id}</p>
-      </div>
-    `;
-  });
-  html += '</div>';
-  contentDiv.innerHTML = html;
 }
 
 async function loadRouteStops() {
@@ -376,13 +349,59 @@ async function loadLiveVehicles() {
     return;
   }
   
+  // Fetch stop information for each vehicle
+  const vehiclesWithStops = await Promise.all(
+    vehicles.map(async (vehicle) => {
+      if (vehicle.stop_id) {
+        try {
+          const stopRes = await fetch(`/stops/${vehicle.stop_id}`);
+          if (stopRes.ok) {
+            const stop = await stopRes.json();
+            return { ...vehicle, stop_name: stop.stop_name };
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch stop info for ${vehicle.stop_id}:`, error);
+        }
+      }
+      return vehicle;
+    })
+  );
+  
   let html = '<div class="vehicles-list">';
-  vehicles.forEach(vehicle => {
+  vehiclesWithStops.forEach(vehicle => {
+    const location = vehicle.stop_name || `Stop ID: ${vehicle.stop_id}`;
+    
+    // Format occupancy information
+    let occupancyText = 'No occupancy data available';
+    if (vehicle.occupancy_status && vehicle.occupancy_status !== '') {
+      // Convert occupancy status to readable format
+      let statusText = vehicle.occupancy_status.toLowerCase().replace(/_/g, ' ');
+      statusText = statusText.charAt(0).toUpperCase() + statusText.slice(1);
+      occupancyText = `${statusText} (${vehicle.occupancy_percentage || 0}%)`;
+    }
+    
+    // Convert status to human-readable format
+    let statusText = '';
+    switch (vehicle.status) {
+      case 'INCOMING_AT':
+        statusText = `Arriving at ${location}`;
+        break;
+      case 'STOPPED_AT':
+        statusText = `Stopped at ${location}`;
+        break;
+      case 'IN_TRANSIT_TO':
+        statusText = `In transit to ${location}`;
+        break;
+      default:
+        statusText = `${vehicle.status} ${location}`;
+    }
+    
     html += `
       <div class="vehicle-item">
         <h4>Vehicle ${vehicle.vehicle_id}</h4>
-        <p><strong>Status:</strong> ${vehicle.status || 'Unknown'}</p>
-        <p><strong>Location:</strong> ${vehicle.latitude}, ${vehicle.longitude}</p>
+        <p><strong>Status:</strong> ${statusText}</p>
+        <p><strong>Direction:</strong> ${vehicle.direction_id === 0 ? 'Outbound' : 'Inbound'}</p>
+        <p><strong>Occupancy:</strong> ${occupancyText}</p>
       </div>
     `;
   });
