@@ -396,29 +396,48 @@ async function loadLiveVehicles() {
 }
 
 async function loadRouteAlerts() {
-  const res = await fetch(`/trip-updates/${selectedRoute.route_id}`);
-  if (!res.ok) throw new Error('Failed to load route alerts');
-  
-  const alerts = await res.json();
-  const contentDiv = document.getElementById("route-tab-content");
-  
-  if (!Array.isArray(alerts) || alerts.length === 0) {
-    contentDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No alerts available for this route</div>';
-    return;
+  try {
+    const res = await fetch("/alerts");
+    if (!res.ok) throw new Error('Failed to load alerts');
+    
+    const alerts = await res.json();
+    const contentDiv = document.getElementById("route-tab-content");
+    
+    if (!Array.isArray(alerts) || alerts.length === 0) {
+      contentDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No alerts available for this route</div>';
+      return;
+    }
+    
+    // Filter alerts that are relevant to this route (route_id in any informed_entity)
+    const relevantAlerts = alerts.filter(alert => {
+      if (!alert.alert || !alert.alert.informed_entity) return false;
+      return alert.alert.informed_entity.some(entity => entity.route_id === selectedRoute.route_id);
+    });
+    
+    if (relevantAlerts.length === 0) {
+      contentDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No alerts for this route</div>';
+      return;
+    }
+    
+    let html = '<div class="alerts-list">';
+    relevantAlerts.forEach(alert => {
+      const headerText = alert.alert.header_text?.translation?.[0]?.text || 'No header';
+      const descriptionText = alert.alert.description_text?.translation?.[0]?.text || '';
+      const effect = alert.alert.effect || 'Unknown';
+      html += `
+        <div class="alert-item">
+          <h4>${headerText}</h4>
+          ${descriptionText ? `<p><strong>Description:</strong> ${descriptionText}</p>` : ''}
+          <p><strong>Effect:</strong> ${effect}</p>
+        </div>
+      `;
+    });
+    html += '</div>';
+    contentDiv.innerHTML = html;
+  } catch (error) {
+    const contentDiv = document.getElementById("route-tab-content");
+    contentDiv.innerHTML = `<div style="text-align: center; color: #f56565; padding: 2rem;">Error loading alerts: ${error.message}</div>`;
   }
-  
-  let html = '<div class="alerts-list">';
-  alerts.forEach(alert => {
-    html += `
-      <div class="alert-item">
-        <h4>Alert</h4>
-        <p><strong>Type:</strong> ${alert.type || 'Unknown'}</p>
-        <p><strong>Message:</strong> ${alert.message || 'No message'}</p>
-      </div>
-    `;
-  });
-  html += '</div>';
-  contentDiv.innerHTML = html;
 }
 
 async function loadFavorites() {
