@@ -31,7 +31,6 @@ function resetUI() {
   document.getElementById("routes-section").style.display = "none";
   document.getElementById("favorites-section").style.display = "none";
   document.getElementById("route-details-section").style.display = "none";
-  document.getElementById("alerts-section").style.display = "none";
   document.getElementById("user-info").innerText = "";
   
   // Clear lists
@@ -42,7 +41,6 @@ function resetUI() {
   document.getElementById("favorites-list").innerHTML = "";
   document.getElementById("route-tab-content").innerHTML = "";
   document.getElementById("selected-route-info").innerHTML = "";
-  document.getElementById("alerts-content").innerHTML = "";
   
   // Reset state
   allRoutes = [];
@@ -59,7 +57,6 @@ function displayUser(user) {
   document.getElementById("user-info").innerText = `Logged in as ${user.username}`;
   document.getElementById("routes-section").style.display = "block";
   document.getElementById("favorites-section").style.display = "block";
-  document.getElementById("alerts-section").style.display = "block";
 }
 
 async function createUser() {
@@ -89,7 +86,6 @@ async function createUser() {
     // Only load routes and favorites if user was successfully created
     await loadRoutes();
     await loadFavorites();
-    await loadAlerts();
     showMessage('User created successfully!');
   } catch (error) {
     showMessage('Error creating user: ' + error.message, 'error');
@@ -124,7 +120,6 @@ async function loadUser() {
     // Only load routes and favorites if user was successfully loaded
     await loadRoutes();
     await loadFavorites();
-    await loadAlerts();
     showMessage(`User ${user.username} loaded successfully!`);
   } catch (error) {
     showMessage('Error loading user: ' + error.message, 'error');
@@ -476,38 +471,6 @@ async function loadFavorites() {
     showMessage('Error loading favorites: ' + error.message, 'error');
     const ul = document.getElementById("favorites-list");
     ul.innerHTML = '<li style="grid-column: 1 / -1; text-align: center; color: #f56565;">Failed to load favorites</li>';
-  }
-}
-
-async function loadAlerts() {
-  try {
-    const res = await fetch("/alerts");
-    if (!res.ok) {
-      throw new Error('Failed to load alerts');
-    }
-    
-    const alerts = await res.json();
-    const contentDiv = document.getElementById("alerts-content");
-    
-    if (!Array.isArray(alerts) || alerts.length === 0) {
-      contentDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No service alerts at this time</div>';
-      return;
-    }
-    
-    let html = '';
-    alerts.forEach(alert => {
-      html += `
-        <div class="alert-item">
-          <h4>${alert.title || 'Service Alert'}</h4>
-          <p>${alert.message || 'No details available'}</p>
-          <small>${alert.timestamp || ''}</small>
-        </div>
-      `;
-    });
-    contentDiv.innerHTML = html;
-  } catch (error) {
-    const contentDiv = document.getElementById("alerts-content");
-    contentDiv.innerHTML = '<div style="text-align: center; color: #f56565; padding: 2rem;">Failed to load alerts</div>';
   }
 }
 
