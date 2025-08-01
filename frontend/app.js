@@ -275,7 +275,12 @@ function showRouteTab(tabName) {
   document.querySelectorAll('.tab-button').forEach(btn => {
     btn.classList.remove('active');
   });
-  event.target.classList.add('active');
+  
+  // Find the clicked button and make it active
+  const clickedButton = event.target;
+  if (clickedButton && clickedButton.classList.contains('tab-button')) {
+    clickedButton.classList.add('active');
+  }
   
   // Load tab content
   loadTabContent(tabName);
@@ -334,24 +339,30 @@ async function loadRouteTrips() {
 }
 
 async function loadRouteStops() {
-  const res = await fetch("/stops");
+  console.log('Loading stops for route:', selectedRoute.route_id);
+  const res = await fetch(`/routes/${selectedRoute.route_id}/stops`);
   if (!res.ok) throw new Error('Failed to load stops');
   
   const stops = await res.json();
+  console.log('Received stops:', stops);
+  console.log('Number of stops:', stops.length);
+  
   const contentDiv = document.getElementById("route-tab-content");
   
   if (!Array.isArray(stops) || stops.length === 0) {
-    contentDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No stops available</div>';
+    contentDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No stops available for this route</div>';
     return;
   }
   
   let html = '<div class="stops-list">';
-  stops.slice(0, 20).forEach(stop => { // Limit to first 20 stops
+  stops.forEach((stop, index) => {
+    console.log(`Stop ${index}:`, stop);
     html += `
       <div class="stop-item">
         <h4>${stop.stop_name || 'Unnamed Stop'}</h4>
         <p><strong>ID:</strong> ${stop.stop_id}</p>
         <p><strong>Code:</strong> ${stop.stop_code || 'N/A'}</p>
+        ${stop.lat && stop.lon ? `<p><strong>Location:</strong> ${stop.lat}, ${stop.lon}</p>` : ''}
       </div>
     `;
   });
