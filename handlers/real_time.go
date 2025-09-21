@@ -2,7 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"public_transport_tracker/cache"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -60,6 +63,15 @@ type LiveVehicle struct {
 func GetLiveVehicles() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		routeID := c.Param("route_id")
+		cacheKey := fmt.Sprintf("live:%s", routeID)
+
+		var result []LiveVehicle
+		err := cache.Get(cacheKey, &result)
+		if err == nil {
+			c.JSON(http.StatusOK, result)
+			return
+		}
+
 		feedURL := "https://cdn.mbta.com/realtime/VehiclePositions_enhanced.json"
 
 		resp, err := http.Get(feedURL)
@@ -76,7 +88,7 @@ func GetLiveVehicles() gin.HandlerFunc {
 			return
 		}
 
-		var result []LiveVehicle
+		result = []LiveVehicle{}
 		for _, item := range feed.Entity {
 			v := item.Vehicle
 			if v.Trip.RouteID == routeID {
@@ -98,6 +110,8 @@ func GetLiveVehicles() gin.HandlerFunc {
 				})
 			}
 		}
+
+		cache.Set(cacheKey, result, 10*time.Second)
 
 		c.JSON(http.StatusOK, result)
 	}
@@ -132,6 +146,15 @@ type AlertFeed struct {
 
 func GetAlerts() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		cacheKey := "alerts:all"
+
+		var alerts []interface{}
+		err := cache.Get(cacheKey, &alerts)
+		if err == nil {
+			c.JSON(http.StatusOK, alerts)
+			return
+		}
+
 		url := "https://cdn.mbta.com/realtime/Alerts_enhanced.json"
 		resp, err := http.Get(url)
 		if err != nil {
@@ -147,7 +170,14 @@ func GetAlerts() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, feed.Entity)
+		alerts = make([]interface{}, len(feed.Entity))
+		for i, entity := range feed.Entity {
+			alerts[i] = entity
+		}
+
+		cache.Set(cacheKey, alerts, 60*time.Second)
+
+		c.JSON(http.StatusOK, alerts)
 	}
 }
 
@@ -172,6 +202,15 @@ type TripUpdateFeed struct {
 func GetTripUpdates() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		routeID := c.Param("route_id")
+		cacheKey := fmt.Sprintf("trip-updates:%s", routeID)
+
+		var result []interface{}
+		err := cache.Get(cacheKey, &result)
+		if err == nil {
+			c.JSON(http.StatusOK, result)
+			return
+		}
+
 		url := "https://cdn.mbta.com/realtime/TripUpdates_enhanced.json"
 
 		resp, err := http.Get(url)
@@ -188,12 +227,14 @@ func GetTripUpdates() gin.HandlerFunc {
 			return
 		}
 
-		var result []interface{}
+		result = []interface{}{}
 		for _, item := range feed.Entity {
 			if item.TripUpdate.Trip.RouteID == routeID {
 				result = append(result, item)
 			}
 		}
+
+		cache.Set(cacheKey, result, 10*time.Second)
 
 		c.JSON(http.StatusOK, result)
 	}

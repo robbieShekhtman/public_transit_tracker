@@ -2,7 +2,10 @@ package handlers
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
+	"public_transport_tracker/cache"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,6 +19,15 @@ type Stop struct {
 
 func GetStops(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		cacheKey := "stops:all"
+
+		var stops []Stop
+		err := cache.Get(cacheKey, &stops)
+		if err == nil {
+			c.JSON(http.StatusOK, stops)
+			return
+		}
+
 		rows, err := db.Query("SELECT stop_id, stop_name, stop_lat, stop_lon FROM stops")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -23,7 +35,7 @@ func GetStops(db *sql.DB) gin.HandlerFunc {
 		}
 		defer rows.Close()
 
-		var stops []Stop
+		stops = []Stop{}
 		for rows.Next() {
 			var (
 				id   string
@@ -53,6 +65,8 @@ func GetStops(db *sql.DB) gin.HandlerFunc {
 			stops = append(stops, s)
 		}
 
+		cache.Set(cacheKey, stops, 24*time.Hour)
+
 		c.JSON(http.StatusOK, stops)
 	}
 }
@@ -64,6 +78,16 @@ func GetStopsByRoute(db *sql.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Route ID is required"})
 			return
 		}
+
+		cacheKey := fmt.Sprintf("routes:%s:stops", routeID)
+
+		var stops []Stop
+		err := cache.Get(cacheKey, &stops)
+		if err == nil {
+			c.JSON(http.StatusOK, stops)
+			return
+		}
+
 		query := `
 			SELECT MIN(s.stop_id) as stop_id, s.stop_name, MIN(s.stop_lat) as stop_lat, MIN(s.stop_lon) as stop_lon
 			FROM stops s
@@ -84,7 +108,7 @@ func GetStopsByRoute(db *sql.DB) gin.HandlerFunc {
 		}
 		defer rows.Close()
 
-		var stops []Stop
+		stops = []Stop{}
 		for rows.Next() {
 			var (
 				id   string
@@ -119,6 +143,8 @@ func GetStopsByRoute(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
+		cache.Set(cacheKey, stops, 6*time.Hour)
+
 		c.JSON(http.StatusOK, stops)
 	}
 }
@@ -126,9 +152,16 @@ func GetStopsByRoute(db *sql.DB) gin.HandlerFunc {
 func GetStopByID(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("stop_id")
+		cacheKey := fmt.Sprintf("stops:%s", id)
 
 		var s Stop
-		err := db.QueryRow("SELECT stop_id, stop_name, stop_lat, stop_lon FROM stops WHERE stop_id = $1", id).
+		err := cache.Get(cacheKey, &s)
+		if err == nil {
+			c.JSON(http.StatusOK, s)
+			return
+		}
+
+		err = db.QueryRow("SELECT stop_id, stop_name, stop_lat, stop_lon FROM stops WHERE stop_id = $1", id).
 			Scan(&s.StopID, &s.Name, &s.Lat, &s.Lon)
 
 		if err == sql.ErrNoRows {
@@ -138,6 +171,8 @@ func GetStopByID(db *sql.DB) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+
+		cache.Set(cacheKey, s, 24*time.Hour)
 
 		c.JSON(http.StatusOK, s)
 	}

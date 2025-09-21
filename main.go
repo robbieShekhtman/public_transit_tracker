@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"public_transport_tracker/cache"
 	"public_transport_tracker/handlers"
 	"public_transport_tracker/parser"
 
@@ -14,6 +15,14 @@ func main() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
+	}
+
+	err = cache.InitializeRedis()
+	if err != nil {
+		log.Printf("Warning: Redis connection failed: %v", err)
+		log.Println("Continuing without Redis caching...")
+	} else {
+		log.Println("Redis caching enabled")
 	}
 
 	db, err := parser.ConnectDB()
