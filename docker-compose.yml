@@ -9,8 +9,14 @@ services:
       PGUSER: postgres
       PGPASSWORD: postgres
       PGDATABASE: transit
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      REDIS_DB: 0
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   db:
