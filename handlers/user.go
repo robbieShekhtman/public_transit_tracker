@@ -9,6 +9,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func GetAllUsers(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		users, err := models.GetAllUsers(db)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			}
+			return
+		}
+
+		c.JSON(http.StatusOK, users)
+	}
+}
+
 func CreateUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req struct {

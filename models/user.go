@@ -18,6 +18,29 @@ func CreateUser(db *sql.DB, username string) (User, error) {
 
 	return u, err
 }
+func GetAllUsers(db *sql.DB) ([]User, error) {
+	var users []User
+
+	rows, err := db.Query(`SELECT id, username, created_at FROM users`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(&u.ID, &u.Username, &u.CreatedAt); err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
 
 func GetUserByID(db *sql.DB, id int) (User, error) {
 	var u User
