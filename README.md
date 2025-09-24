@@ -1,6 +1,6 @@
 # Public Transport Tracker
 
-Real-time public transit tracking system built with Go and PostgreSQL.
+Real-time public transit tracking system for greater Boston built with Go and PostgreSQL.
 
 ## Features
 
